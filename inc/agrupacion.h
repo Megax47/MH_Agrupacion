@@ -9,7 +9,7 @@
 
 struct Punto {
     std::vector<float> posicion;
-    int dimension;
+    int dimension = 0;
 
     //Sobrecargar < para usar set
     bool operator<(const Punto& other) const {
@@ -27,6 +27,11 @@ struct Punto {
             ret += ",";
         }
         return ret;
+    }
+
+    float distanciaEuclidea(const Punto& other) const {
+        assert(this->dimension == other.dimension);
+        
     }
 };
 
@@ -66,5 +71,34 @@ public:
         return ret;
     }
 
-    
+    tFitness fitness(const tSolution<int> &solution) { return 0;}
+
+    tFitness fitness(const tSolution<int> &solution,
+                           SolutionFactoringInfo<int> *solution_info,
+                           unsigned pos_change, int new_value) {
+    auto newsol(solution);
+    newsol[pos_change] = new_value;
+    return fitness(newsol);
+    }
+
+    SolutionFactoringInfo<int> *
+  generateFactoringInfo(const tSolution<int> &solution) {
+    return new SolutionFactoringInfo<int>();
+  }
+
+    void updateSolutionFactoringInfo(SolutionFactoringInfo<int> *solution_info,
+                                           const tSolution<int> &solution,
+                                           unsigned pos_change,
+                                           int new_value) {}
+
+    tSolution<int> createSolution() {};
+
+    size_t getSolutionSize() {};
+
+    std::pair<int, int> getSolutionDomainRange() {};
+
+    bool isValid(const tSolution<int> &solution) {};
+
+    void fix(tSolution<int> &solution) {};
+
 };

@@ -3,7 +3,7 @@
 Agrupacion::Agrupacion (const char* dataFilename, const char* constraintFilename){
     std::ifstream file;
     file.open(dataFilename);
-
+    nPuntos = 0;
     if(!file){
 
         std::string err;
@@ -16,6 +16,7 @@ Agrupacion::Agrupacion (const char* dataFilename, const char* constraintFilename
     else{
         std::string line, word;
         while(getline(file, line)){
+            if(line.empty() || line.find_last_not_of(" \r\n\t") == std::string::npos) continue;
             Punto newPunto;
             std::stringstream s(line);
             while(getline(s, word, ',')){
@@ -47,7 +48,9 @@ Agrupacion::Agrupacion (const char* dataFilename, const char* constraintFilename
         int j = 0;
         restricciones.resize(nPuntos);
         for(int i=0; i<nPuntos; ++i) restricciones[i].resize(nPuntos);
+
         while(getline(file, line)){
+            if(line.empty() || line.find_last_not_of(" \r\n\t") == std::string::npos) continue;
             std::stringstream s(line);
             while(getline(s, word, ',')){ //Se puede hacer mas eficiente (matriz simetrica)
                 restricciones[i][j] = stoi(word);
