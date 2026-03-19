@@ -11,7 +11,6 @@
 
 struct Punto {
     std::vector<float> posicion;
-    int dimension = 0;
 
     //Sobrecargar < para usar set
     bool operator<(const Punto& other) const {
@@ -24,7 +23,7 @@ struct Punto {
 
     std::string toString() {
         std::string ret;
-        for(int i=0; i<dimension; ++i){
+        for(int i=0; i<posicion.size(); ++i){
             ret += std::to_string(posicion[i]);
             ret += ",";
         }
@@ -32,10 +31,10 @@ struct Punto {
     }
 
     float distanciaEuclidea(const Punto& other) const {
-        assert(dimension == other.dimension);
+        assert(posicion.size() == other.posicion.size());
         float sum = 0;
         float dif = 0;
-        for(int i=0; i<dimension; ++i){ //?Desenrrollar
+        for(int i=0; i<posicion.size(); ++i){ //?Desenrrollar
             dif = posicion[i]-other.posicion[i];
             sum += dif*dif;
         }
@@ -61,7 +60,7 @@ class Agrupacion: public Problem<int> {
     float lambda; //mayor distancia entre numero de restricciones
 
 public:
-    Agrupacion (const char* dataFilename, const char* constraintFilename);
+    Agrupacion (const char* dataFilename, const char* constraintFilename, int nCluster);
 
     std::string toString(){
         std::string ret;
@@ -111,17 +110,76 @@ public:
 
     tSolution<int> createSolution(){
         tSolution<int> solution(nPuntos);
-        for (int i = 0; i < solution.size(); ++i) {
-            solution[i] = Random::get<int>(0,nCluster);
+        do{
+            for (int i = 0; i < solution.size(); ++i)
+                solution[i] = Random::get<int>(0,nCluster-1);
         }
+        while (!isValid(solution));
+
         return solution;
     }
     
-    size_t getSolutionSize() {};
+    size_t getSolutionSize() { return nPuntos; }
 
-    std::pair<int, int> getSolutionDomainRange() {};
+    std::pair<int, int> getSolutionDomainRange() { 
+        return std::make_pair(0, nCluster - 1); 
+    }
 
-    bool isValid(const tSolution<int> &solution) {};
+    int getDimension() { return puntos[0].posicion.size(); }
+
+    std::pair<float, float> getSpaceLimits(const int dimension) {
+        float min = puntos[0].posicion[dimension];
+        float max = puntos[0].posicion[dimension];
+        for (int i = 1; i < nPuntos; ++i) {
+            if (puntos[i].posicion[dimension] < min) {
+                min = puntos[i].posicion[dimension];
+            }
+            if (puntos[i].posicion[dimension] > max) {
+                max = puntos[i].posicion[dimension];
+            }
+        }
+        return std::make_pair(min, max);
+    }
+
+    std::vector<std::vector<short>> getMatrizRestricciones() const { return restricciones; }
+
+    std::vector<Punto> getPuntos() const { return puntos; }
+    
+    bool isValid(const tSolution<int> &solution) {
+        //Comprobar que cada cluster tiene al menos un punto
+        std::vector<bool> cluster_has_point(nCluster, false);
+        for (int i = 0; i < solution.size(); ++i) {
+            if (solution[i] < 0 || solution[i] >= nCluster) {
+                return false; // Cluster fuera de rango
+            }
+            cluster_has_point[solution[i]] = true;
+        }
+        for (int i = 0; i < nCluster; ++i) {
+            if (!cluster_has_point[i]) {
+                return false; // Cluster sin puntos
+            }
+        }
+        return true;
+    }
+
+    bool isValidChange(const tSolution<int> &solution, unsigned pos_change, int new_value) {
+        // Comprobar que el nuevo valor es un cluster válido
+        if (new_value < 0 || new_value >= nCluster) {
+            return false; // Cluster fuera de rango
+        }
+        // Comprobar que el cambio no deja ningún cluster sin puntos
+        int old_value = solution[pos_change];
+        if (old_value == new_value) {
+            return true; // No hay cambio, por lo que sigue siendo válido
+        }
+        std::vector<int> cluster_counts(nCluster, 0);
+        for (int i = 0; i < solution.size(); ++i) {
+            cluster_counts[solution[i]]++;
+        }
+        cluster_counts[old_value]--;
+        cluster_counts[new_value]++;
+        return cluster_counts[old_value] > 0; // El cluster antiguo aún tiene puntos
+    }
 
     void fix(tSolution<int> &solution) {};
 

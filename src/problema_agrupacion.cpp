@@ -1,6 +1,6 @@
 #include "agrupacion.h"
 
-Agrupacion::Agrupacion (const char* dataFilename, const char* constraintFilename){
+Agrupacion::Agrupacion (const char* dataFilename, const char* constraintFilename, int nCluster) : nCluster(nCluster) {
     std::ifstream file;
 
     //Lectura Datos
@@ -23,7 +23,6 @@ Agrupacion::Agrupacion (const char* dataFilename, const char* constraintFilename
             Punto newPunto;
             std::stringstream s(line);
             while(getline(s, word, ',')){
-                ++newPunto.dimension;
                 newPunto.posicion.push_back(stof(word));
             }
             ++nPuntos;
@@ -100,6 +99,8 @@ tFitness Agrupacion::fitness(const tSolution<int> &solution){
 
     float fitness = 0;
 
+    int dimension = getDimension();
+    
     //Separar en clusters
     std::vector<std::vector<int>> clusters(nCluster);
     for(int i=0; i<nPuntos; ++i) clusters[solution[i]].push_back(i);
@@ -107,16 +108,16 @@ tFitness Agrupacion::fitness(const tSolution<int> &solution){
     //Calcular centróides
     std::vector<Punto> centroides(nCluster);
     for(int i=0; i<nCluster; ++i){ //Paralelizar este bucle
-        
+
+        for(int k=0; k<dimension; ++k) centroides[i].posicion.push_back(0); //Inicializar posiciones de los centroides a 0
+
         for(int j=0; j<clusters[i].size(); ++j){ //Acumular posiciones de los puntos del cluster i
-            for(int k=0; k<puntos[0].dimension; ++k){
-                centroides[i].posicion.push_back(0);
-            }
-            for(int k=0; k<puntos[0].dimension; ++k){
+            
+            for(int k=0; k<dimension; ++k){
                 centroides[i].posicion[k] += puntos[clusters[i][j]].posicion[k];
             }
         }
-        for(int k=0; k<puntos[0].dimension; ++k){ //Dividir por el número de puntos del cluster i
+        for(int k=0; k<dimension; ++k){ //Dividir por el número de puntos del cluster i
             centroides[i].posicion[k] /= clusters[i].size();
         }
     }

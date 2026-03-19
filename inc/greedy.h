@@ -1,11 +1,12 @@
 #pragma once
 #include <mh.h>
+#include <agrupacion.h>
 
 using namespace std;
 
 /**
- * Implementation of the Random Search metaheuristic
- *  - Randomly generates solutions and selects the best one
+ * Implementation of the Greedy Search heuristic
+ *  - Iteratively builds a solution by making locally optimal choices
  *
  * @see MH
  * @see Problem
