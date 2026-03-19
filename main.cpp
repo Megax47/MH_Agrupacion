@@ -14,9 +14,9 @@ using namespace std;
 
 int main(int argc, char *argv[]) {
 
-  Agrupacion prueba("./data/bupa_set.dat", "./data/bupa_set_const_15.dat");
+  Agrupacion prueba("./data/zoo_set.dat", "./data/zoo_set_const_15.dat");
 
-  cout << prueba.toString() << endl;
+  //cout << prueba.toString() << endl;
   
   // long int seed;
   // // Seed the random number generator

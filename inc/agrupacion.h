@@ -6,6 +6,8 @@
 #include <fstream>
 #include <iostream>
 #include <sstream>
+#include <cmath>
+#include <random.hpp>
 
 struct Punto {
     std::vector<float> posicion;
@@ -30,23 +32,33 @@ struct Punto {
     }
 
     float distanciaEuclidea(const Punto& other) const {
-        assert(this->dimension == other.dimension);
-        
+        assert(dimension == other.dimension);
+        float sum = 0;
+        float dif = 0;
+        for(int i=0; i<dimension; ++i){ //?Desenrrollar
+            dif = posicion[i]-other.posicion[i];
+            sum += dif*dif;
+        }
+        return sqrt(sum);
     }
 };
 
 class Agrupacion: public Problem<int> {
 
-    //Restricciones (Matriz o lista?) matriz
+    //Restricciones 
     std::vector<std::vector<short>> restricciones;
+    std::vector<std::pair<int,int>> ML;
+    std::vector<std::pair<int,int>> CL;
 
     //Puntos
     std::vector<Punto> puntos;
     int nPuntos;
 
     //Clusters
-    std::vector<short> cluster;
     short nCluster;
+
+    //Parametros
+    float lambda; //mayor distancia entre numero de restricciones
 
 public:
     Agrupacion (const char* dataFilename, const char* constraintFilename);
@@ -59,19 +71,25 @@ public:
             ret += "\n";
         }
 
-        ret += "Matriz de restricciones\n";
-        for(int i=0; i<nPuntos; ++i){
-            for(int j=0; j<nPuntos; ++j){
-                ret += std::to_string(restricciones[i][j]);
-                ret += ",";
-            }
-            ret += "\n";
+        ret += "Restricciones\n";
+        ret += "ML:\n";
+        for(int i=0; i<ML.size(); ++i){
+            ret += "(" + std::to_string(ML[i].first) + "," 
+                + std::to_string(ML[i].second) + ")\n";  
         }
+
+        ret += "CL:\n";
+        for(int i=0; i<CL.size(); ++i){
+            ret += "(" + std::to_string(CL[i].first) + "," 
+                + std::to_string(CL[i].second) + ")\n";
+        }
+
+        ret += "Lambda = " + std::to_string(lambda) + "\n";
         
         return ret;
     }
 
-    tFitness fitness(const tSolution<int> &solution) { return 0;}
+    tFitness fitness(const tSolution<int> &solution);
 
     tFitness fitness(const tSolution<int> &solution,
                            SolutionFactoringInfo<int> *solution_info,
@@ -91,8 +109,14 @@ public:
                                            unsigned pos_change,
                                            int new_value) {}
 
-    tSolution<int> createSolution() {};
-
+    tSolution<int> createSolution(){
+        tSolution<int> solution(nPuntos);
+        for (int i = 0; i < solution.size(); ++i) {
+            solution[i] = Random::get<int>(0,nCluster);
+        }
+        return solution;
+    }
+    
     size_t getSolutionSize() {};
 
     std::pair<int, int> getSolutionDomainRange() {};
