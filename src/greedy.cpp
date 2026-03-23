@@ -28,7 +28,7 @@ ResultMHInt GreedySearch::optimize(ProblemInt &problem, int maxevals) {
   tSolution<int> sol_anterior(realproblem.getSolutionSize());
 
   //Genera nCluster centroides aleatorios
-  int nCluster = realproblem.getSolutionDomainRange().second +1;
+  int nCluster = realproblem.getSolutionDomainRange().second;
   int dimension = realproblem.getDimension();
   vector<Punto> centroides(nCluster);
   for(int i=0; i<nCluster; ++i){

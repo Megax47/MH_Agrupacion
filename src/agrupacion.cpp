@@ -1,4 +1,4 @@
-#include "agrupacion.h"
+#include <agrupacion.h>
 
 Agrupacion::Agrupacion (const char* dataFilename, const char* constraintFilename, int nCluster) : nCluster(nCluster) {
     std::ifstream file;
@@ -100,7 +100,7 @@ tFitness Agrupacion::fitness(const tSolution<int> &solution){
     float fitness = 0;
 
     int dimension = getDimension();
-    
+
     //Separar en clusters
     std::vector<std::vector<int>> clusters(nCluster);
     for(int i=0; i<nPuntos; ++i) clusters[solution[i]].push_back(i);
@@ -150,4 +150,68 @@ tFitness Agrupacion::fitness(const tSolution<int> &solution){
     fitness += desviacion_media + lambda * penalizacion;
 
     return fitness;
+}
+
+tFitness Agrupacion::fitness(const tSolution<int> &solution,
+                           SolutionFactoringInfo<int> *solution_info,
+                           unsigned pos_change, int new_value){
+    auto newsol(solution);
+    newsol[pos_change] = new_value;
+    return fitness(newsol);
+}
+
+std::string Agrupacion::EvaluateSolution(tSolution<int> &solution){
+    float fitness = this->fitness(solution);
+    //Calculamos el número de restricciones incumplidas como media
+    float penalizacion = 0;
+    for(int i=0; i<ML.size(); ++i){
+        if(solution[ML[i].first] != solution[ML[i].second]) ++penalizacion;
+    }
+    for(int i=0; i<CL.size(); ++i){
+        if(solution[CL[i].first] == solution[CL[i].second]) ++penalizacion;
+    }
+    penalizacion = penalizacion/(ML.size()+CL.size());
+
+    int dimension = getDimension();
+
+    //Separar en clusters
+    std::vector<std::vector<int>> clusters(nCluster);
+    for(int i=0; i<nPuntos; ++i) clusters[solution[i]].push_back(i);
+
+    //Calcular centróides
+    std::vector<Punto> centroides(nCluster);
+    for(int i=0; i<nCluster; ++i){ //Paralelizar este bucle
+
+        for(int k=0; k<dimension; ++k) centroides[i].posicion.push_back(0); //Inicializar posiciones de los centroides a 0
+
+        for(int j=0; j<clusters[i].size(); ++j){ //Acumular posiciones de los puntos del cluster i
+            
+            for(int k=0; k<dimension; ++k){
+                centroides[i].posicion[k] += puntos[clusters[i][j]].posicion[k];
+            }
+        }
+        for(int k=0; k<dimension; ++k){ //Dividir por el número de puntos del cluster i
+            centroides[i].posicion[k] /= clusters[i].size();
+        }
+    }
+
+    //Calcular distancia intra-cluster
+    std::vector<float> dist_intra(nCluster, 0);
+    for(int i=0; i<nPuntos; ++i){
+        dist_intra[solution[i]] += puntos[i].distanciaEuclidea(centroides[solution[i]]);
+    }
+    for(int i=0; i<nCluster; ++i){
+        dist_intra[i] /= clusters[i].size();
+    }
+
+    //Calcular desviacion media
+    float desviacion_media = 0;
+    for(int i=0; i<nCluster; ++i){
+        desviacion_media += dist_intra[i];
+    }
+    desviacion_media /= nCluster;
+
+    return "Fitness: " + std::to_string(fitness) 
+    + "\nPenalización: " + std::to_string(penalizacion)
+    + "\nDistancia media: " + std::to_string(desviacion_media);
 }

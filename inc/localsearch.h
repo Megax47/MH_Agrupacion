@@ -9,21 +9,7 @@
  * @see MH
  * @see Problem
  */
-template <typename tDomain> 
-class LocalSearch : public MH<tDomain> {
+class LocalSearch : public MH<int> {
 
-    ResultMH<tDomain> optimize(Problem<tDomain> &problem, int maxevals) override {
-        assert(maxevals > 0);
-        tSolution<tDomain> solution = problem.createSolution();
-        tFitness fitness = problem.fitness(solution);
-        unsigned int evaluations = 0;
-
-        while  {
-            bool improved = false;
-            
-            // Generamos 
-        }while(evaluations < maxevals && improved);
-
-        return ResultMH<tDomain>(solution, fitness, evaluations);
-    }
+    ResultMH<int> optimize(Problem<int> &problem, int maxevals);
 };

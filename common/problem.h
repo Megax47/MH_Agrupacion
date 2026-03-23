@@ -98,10 +98,22 @@ public:
    */
   virtual bool isValid(const tSolution<tDomain> &solution) = 0;
 
+    /**
+   * Check if the change to the solution is valid
+   * @param solution to check. IT HAS TO BE VALID BEFORE THE CHANGE
+   * @param pos_change position of the solution to change.
+   * @param new_value new value for the position.
+   * @return true if the solution is valid, false otherwise.
+   */
+  virtual bool isValid(const tSolution<int> &solution, unsigned pos_change, int new_value) = 0;
   /**
    * Update the solution to fix it, if isValid returns false
    * @param solution to fix.
    */
+
+  
+  virtual std::string EvaluateSolution(tSolution<tDomain> &solution) =0;
+
   virtual void fix(tSolution<tDomain> &solution) = 0;
 };
 

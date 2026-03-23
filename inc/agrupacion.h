@@ -92,11 +92,7 @@ public:
 
     tFitness fitness(const tSolution<int> &solution,
                            SolutionFactoringInfo<int> *solution_info,
-                           unsigned pos_change, int new_value) {
-    auto newsol(solution);
-    newsol[pos_change] = new_value;
-    return fitness(newsol);
-    }
+                           unsigned pos_change, int new_value);
 
     SolutionFactoringInfo<int> *
   generateFactoringInfo(const tSolution<int> &solution) {
@@ -122,7 +118,7 @@ public:
     size_t getSolutionSize() { return nPuntos; }
 
     std::pair<int, int> getSolutionDomainRange() { 
-        return std::make_pair(0, nCluster - 1); 
+        return std::make_pair(0, nCluster); 
     }
 
     int getDimension() { return puntos[0].posicion.size(); }
@@ -162,24 +158,20 @@ public:
         return true;
     }
 
-    bool isValidChange(const tSolution<int> &solution, unsigned pos_change, int new_value) {
-        // Comprobar que el nuevo valor es un cluster válido
-        if (new_value < 0 || new_value >= nCluster) {
-            return false; // Cluster fuera de rango
-        }
-        // Comprobar que el cambio no deja ningún cluster sin puntos
+    bool isValid(const tSolution<int> &solution, unsigned pos_change, int new_value) {
+        //Comprobar que el cluster al que se va a mover el punto tiene al menos un punto
+
+        if (new_value < 0 || new_value >= nCluster) return false; // Cluster fuera de rango
         int old_value = solution[pos_change];
-        if (old_value == new_value) {
-            return true; // No hay cambio, por lo que sigue siendo válido
-        }
-        std::vector<int> cluster_counts(nCluster, 0);
         for (int i = 0; i < solution.size(); ++i) {
-            cluster_counts[solution[i]]++;
+            if (i != pos_change) {  
+               if(solution[i] == old_value) return true; // El cluster al que se va a mover el punto tiene al menos un punto
+            }
         }
-        cluster_counts[old_value]--;
-        cluster_counts[new_value]++;
-        return cluster_counts[old_value] > 0; // El cluster antiguo aún tiene puntos
+        return false;
     }
+
+    std::string EvaluateSolution(tSolution<int> &solution);
 
     void fix(tSolution<int> &solution) {};
 

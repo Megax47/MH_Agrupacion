@@ -3,6 +3,8 @@
 #include <random.hpp>
 #include <string>
 #include <util.h>
+#include <chrono>
+
 // Real problem class
 #include "agrupacion.h"
 
@@ -32,7 +34,7 @@ int main(int argc, char *argv[]) {
   // Create the algorithms
   RandomSearch<int> ralg = RandomSearch<int>();
   GreedySearch rgreedy = GreedySearch();
-  LocalSearch<int> rlocal = LocalSearch<int>();
+  LocalSearch rlocal = LocalSearch();
   // Create the specific problem
   Agrupacion rproblem = Agrupacion(argv[1], argv[2], atoi(argv[3]));
   // Solve using evaluations
@@ -45,10 +47,16 @@ int main(int argc, char *argv[]) {
     Random::seed(seed);
     cout << algoritmos[i].first << endl;
     auto mh = algoritmos[i].second;
-    ResultMH result = mh->optimize(*problem, 5000);
-    cout << "Best solution: " << result.solution << endl;
-    cout << "Best fitness: " << result.fitness << endl;
+    auto momentoInicio = std::chrono::high_resolution_clock::now();
+    ResultMH result = mh->optimize(*problem, 100000);
+    auto momentoFin = std::chrono::high_resolution_clock::now();
+    //cout << "Best solution: " << result.solution << endl;
+    //cout << "Is valid: " << problem->isValid(result.solution) << endl;
+    cout << problem->EvaluateSolution(result.solution) << endl;
     cout << "Evaluations: " << result.evaluations << endl;
+    std::chrono::milliseconds tiempo = std::chrono::duration_cast<std::chrono::milliseconds>(momentoFin - momentoInicio);
+    cout <<"Tiempo Pasado: " <<tiempo.count() <<endl;
+    cout << "-----------------------------" << endl;
   }
 
   return 0;
