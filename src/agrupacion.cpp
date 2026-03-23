@@ -155,9 +155,128 @@ tFitness Agrupacion::fitness(const tSolution<int> &solution){
 tFitness Agrupacion::fitness(const tSolution<int> &solution,
                            SolutionFactoringInfo<int> *solution_info,
                            unsigned pos_change, int new_value){
-    auto newsol(solution);
-    newsol[pos_change] = new_value;
-    return fitness(newsol);
+    
+    AgrupacionFactoringInfo *info = dynamic_cast<AgrupacionFactoringInfo *>(solution_info);
+    auto new_solution = solution;
+    new_solution[pos_change] = new_value; // Actualizamos la solución con el cambio propuesto
+    if(info == nullptr){
+        return fitness(new_solution); // Si no se puede hacer el cast, calculamos la fitness completa
+    } 
+
+    float fitness = 0;
+    int old_value = solution[pos_change];
+    int dimension = info->dimension;
+
+    auto clusters = info->clusters;
+    auto centroides = info->centroides;
+
+    //Eliminar el punto del cluster antiguo
+    clusters[old_value].erase(std::remove(clusters[old_value].begin(), clusters[old_value].end(), pos_change), clusters[old_value].end());
+    
+    //Añadir el punto al nuevo cluster
+    clusters[new_value].push_back(pos_change);
+
+    //Actualizar centroides
+    for(int k=0; k<dimension; ++k){
+        centroides[old_value].posicion[k] *= clusters[old_value].size() + 1; 
+        centroides[old_value].posicion[k] -= puntos[pos_change].posicion[k];
+        centroides[old_value].posicion[k] /= clusters[old_value].size();
+        centroides[new_value].posicion[k] *= clusters[new_value].size() -1; 
+        centroides[new_value].posicion[k] += puntos[pos_change].posicion[k];
+        centroides[new_value].posicion[k] /= clusters[new_value].size();
+    }
+
+     //Calcular distancia intra-cluster
+    std::vector<float> dist_intra(nCluster, 0);
+    for(int i=0; i<nPuntos; ++i){
+        dist_intra[new_solution[i]] += puntos[i].distanciaEuclidea(centroides[new_solution[i]]);
+    }
+    for(int i=0; i<nCluster; ++i){
+        dist_intra[i] /= clusters[i].size();
+    }
+
+    //Calcular desviacion media
+    float desviacion_media = 0;
+    for(int i=0; i<nCluster; ++i){
+        desviacion_media += dist_intra[i];
+    }
+    desviacion_media /= nCluster;
+
+    //Calcular penalización por restricciones incumplidas
+    int penalizacion = 0;
+    for(int i=0; i<ML.size(); ++i){
+        if(new_solution[ML[i].first] != new_solution[ML[i].second]) ++penalizacion;
+    }
+    for(int i=0; i<CL.size(); ++i){
+        if(new_solution[CL[i].first] == new_solution[CL[i].second]) ++penalizacion;
+    }
+
+    fitness += desviacion_media + lambda * penalizacion;
+
+    return fitness;
+}
+
+SolutionFactoringInfo<int> *
+  Agrupacion::generateFactoringInfo(const tSolution<int> &solution){
+
+    int dimension = getDimension();
+
+    //Separar en clusters
+    std::vector<std::vector<int>> clusters(nCluster);
+    for(int i=0; i<nPuntos; ++i) clusters[solution[i]].push_back(i);
+
+    //Calcular centróides
+    std::vector<Punto> centroides(nCluster);
+    for(int i=0; i<nCluster; ++i){ //Paralelizar este bucle
+
+        for(int k=0; k<dimension; ++k) centroides[i].posicion.push_back(0); //Inicializar posiciones de los centroides a 0
+
+        for(int j=0; j<clusters[i].size(); ++j){ //Acumular posiciones de los puntos del cluster i
+            
+            for(int k=0; k<dimension; ++k){
+                centroides[i].posicion[k] += puntos[clusters[i][j]].posicion[k];
+            }
+        }
+        for(int k=0; k<dimension; ++k){ //Dividir por el número de puntos del cluster i
+            centroides[i].posicion[k] /= clusters[i].size();
+        }
+    }
+
+    return new AgrupacionFactoringInfo(dimension, clusters, centroides);
+}
+
+void Agrupacion::updateSolutionFactoringInfo(SolutionFactoringInfo<int> *solution_info,
+                                           const tSolution<int> &solution,
+                                           unsigned pos_change,
+                                           int new_value)
+{   
+    //Actualizar la información de factoring después de un cambio en la solución
+    AgrupacionFactoringInfo *info = dynamic_cast<AgrupacionFactoringInfo *>(solution_info);
+    if(info == nullptr) return; // Si no se puede hacer el cast, no actualizamos la información de factoring
+    
+    int old_value = solution[pos_change];
+    int dimension = info->dimension;
+
+    //Actualizar clusters
+    auto &clusters = info->clusters;
+    auto &centroides = info->centroides;
+
+    //Eliminar el punto del cluster antiguo
+    clusters[old_value].erase(std::remove(clusters[old_value].begin(), clusters[old_value].end(), pos_change), clusters[old_value].end());
+    
+    //Añadir el punto al nuevo cluster
+    clusters[new_value].push_back(pos_change);
+
+    //Actualizar centroides
+    for(int k=0; k<dimension; ++k){
+        centroides[old_value].posicion[k] *= clusters[old_value].size() + 1; 
+        centroides[old_value].posicion[k] -= puntos[pos_change].posicion[k];
+        centroides[old_value].posicion[k] /= clusters[old_value].size();
+        centroides[new_value].posicion[k] *= clusters[new_value].size() -1; 
+        centroides[new_value].posicion[k] += puntos[pos_change].posicion[k];
+        centroides[new_value].posicion[k] /= clusters[new_value].size();
+        
+    }
 }
 
 std::string Agrupacion::EvaluateSolution(tSolution<int> &solution){

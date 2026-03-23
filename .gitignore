@@ -39,3 +39,4 @@ CMakeCache.txt
 cmake_install.cmake
 build/CMakeCache.txt
 main
+main_profile.output

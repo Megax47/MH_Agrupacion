@@ -16,6 +16,7 @@ using Random = effolkronium::random_static;
  */
 template<typename tDomain>
 class SolutionFactoringInfo {
+public:
     virtual ~SolutionFactoringInfo() = default; // Default destructor
 };
 

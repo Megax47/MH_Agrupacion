@@ -15,6 +15,7 @@ ResultMH<int> LocalSearch::optimize(Problem<int> &problem, int maxevals) {
     assert(maxevals > 0);
     tSolution<int> solution = problem.createSolution();
     tFitness fitness = problem.fitness(solution);
+    SolutionFactoringInfo<int> *solution_info = problem.generateFactoringInfo(solution);
     auto neighborhood = getMoves(problem);
     unsigned int evaluations = 0;
     bool improved = true;
@@ -30,9 +31,10 @@ ResultMH<int> LocalSearch::optimize(Problem<int> &problem, int maxevals) {
             int pos_change = move.first;
             int new_value = move.second;
             if (!problem.isValid(solution, pos_change, new_value)) continue; // Si el movimiento no es válido, lo saltamos
-            tFitness new_fitness = problem.fitness(solution, nullptr, pos_change, new_value);
+            tFitness new_fitness = problem.fitness(solution, solution_info, pos_change, new_value);
             evaluations++;
             if (new_fitness < fitness) { // Si encontramos una solución mejor, la aceptamos
+                problem.updateSolutionFactoringInfo(solution_info, solution, pos_change, new_value);
                 solution[pos_change] = new_value;
                 fitness = new_fitness;
                 improved = true;

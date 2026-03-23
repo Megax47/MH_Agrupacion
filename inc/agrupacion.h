@@ -42,6 +42,19 @@ struct Punto {
     }
 };
 
+class AgrupacionFactoringInfo : public SolutionFactoringInfo<int> {
+
+    int dimension;
+    std::vector<std::vector<int>> clusters;
+    std::vector<Punto> centroides;
+
+    friend class Agrupacion;
+
+public:
+    AgrupacionFactoringInfo(int dimension,  std::vector<std::vector<int>> clusters,
+    std::vector<Punto> centroides) : dimension(dimension), clusters(clusters), centroides(centroides) {}
+}; 
+
 class Agrupacion: public Problem<int> {
 
     //Restricciones 
@@ -95,14 +108,12 @@ public:
                            unsigned pos_change, int new_value);
 
     SolutionFactoringInfo<int> *
-  generateFactoringInfo(const tSolution<int> &solution) {
-    return new SolutionFactoringInfo<int>();
-  }
+  generateFactoringInfo(const tSolution<int> &solution);
 
     void updateSolutionFactoringInfo(SolutionFactoringInfo<int> *solution_info,
                                            const tSolution<int> &solution,
                                            unsigned pos_change,
-                                           int new_value) {}
+                                           int new_value);
 
     tSolution<int> createSolution(){
         tSolution<int> solution(nPuntos);
