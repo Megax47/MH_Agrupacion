@@ -72,7 +72,6 @@ Agrupacion::Agrupacion (const char* dataFilename, const char* constraintFilename
     for(int i=0; i<nPuntos; ++i){
         for(int j=i+1; j<nPuntos; ++j){
             std::pair<int,int> rest(i,j);
-            //Inicializar listas aquí ¿¿¿ y pasar de la matriz??
             if(restricciones[i][j] == -1) CL.push_back(rest);
             else if(restricciones[i][j] == 1) ML.push_back(rest);
         }
@@ -139,14 +138,8 @@ tFitness Agrupacion::fitness(const tSolution<int> &solution){
     desviacion_media /= nCluster;
 
     //Calcular penalización por restricciones incumplidas
-    int penalizacion = 0;
-    for(int i=0; i<ML.size(); ++i){
-        if(solution[ML[i].first] != solution[ML[i].second]) ++penalizacion;
-    }
-    for(int i=0; i<CL.size(); ++i){
-        if(solution[CL[i].first] == solution[CL[i].second]) ++penalizacion;
-    }
-
+    int penalizacion = getPenalizacion(solution);
+    
     fitness += desviacion_media + lambda * penalizacion;
 
     return fitness;
@@ -203,19 +196,13 @@ tFitness Agrupacion::fitness(const tSolution<int> &solution,
     desviacion_media /= nCluster;
 
     //Calcular penalización por restricciones incumplidas
-    int penalizacion = 0;
-    for(int i=0; i<ML.size(); ++i){
-        if(new_solution[ML[i].first] != new_solution[ML[i].second]) ++penalizacion;
-    }
-    for(int i=0; i<CL.size(); ++i){
-        if(new_solution[CL[i].first] == new_solution[CL[i].second]) ++penalizacion;
-    }
+    int penalizacion = info->penalizacion + getDiferenciaPenalizacion(solution, pos_change, new_value);
 
     fitness += desviacion_media + lambda * penalizacion;
 
     return fitness;
 }
-
+    
 SolutionFactoringInfo<int> *
   Agrupacion::generateFactoringInfo(const tSolution<int> &solution){
 
@@ -242,7 +229,10 @@ SolutionFactoringInfo<int> *
         }
     }
 
-    return new AgrupacionFactoringInfo(dimension, clusters, centroides);
+    //Calcular penalización por restricciones incumplidas
+    int penalizacion = getPenalizacion(solution);
+
+    return new AgrupacionFactoringInfo(dimension, penalizacion, clusters, centroides);
 }
 
 void Agrupacion::updateSolutionFactoringInfo(SolutionFactoringInfo<int> *solution_info,
@@ -277,6 +267,9 @@ void Agrupacion::updateSolutionFactoringInfo(SolutionFactoringInfo<int> *solutio
         centroides[new_value].posicion[k] /= clusters[new_value].size();
         
     }
+
+    //Actualizar penalización
+    info->penalizacion += getDiferenciaPenalizacion(solution, pos_change, new_value);
 }
 
 std::string Agrupacion::EvaluateSolution(tSolution<int> &solution){

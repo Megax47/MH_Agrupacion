@@ -45,14 +45,15 @@ struct Punto {
 class AgrupacionFactoringInfo : public SolutionFactoringInfo<int> {
 
     int dimension;
+    int penalizacion;
     std::vector<std::vector<int>> clusters;
     std::vector<Punto> centroides;
 
     friend class Agrupacion;
 
 public:
-    AgrupacionFactoringInfo(int dimension,  std::vector<std::vector<int>> clusters,
-    std::vector<Punto> centroides) : dimension(dimension), clusters(clusters), centroides(centroides) {}
+    AgrupacionFactoringInfo(int dimension, int penalizacion, std::vector<std::vector<int>> clusters,
+    std::vector<Punto> centroides) : dimension(dimension), penalizacion(penalizacion), clusters(clusters), centroides(centroides) {}
 }; 
 
 class Agrupacion: public Problem<int> {
@@ -186,4 +187,35 @@ public:
 
     void fix(tSolution<int> &solution) {};
 
+    int getPenalizacion(const tSolution<int> &solution) {
+        int penalizacion = 0;
+        for(int i=0; i<ML.size(); ++i){
+            auto ML_pair = ML[i];
+            if(solution[ML_pair.first] != solution[ML_pair.second]) ++penalizacion;
+        }
+        for(int i=0; i<CL.size(); ++i){
+            auto CL_pair = CL[i];
+            if(solution[CL_pair.first] == solution[CL_pair.second]) ++penalizacion;
+        }
+        return penalizacion;
+    }
+
+    //Calcula la diferencia en la penalización por restricciones incumplidas de un solo punto, para usar en el factoring
+    int getDiferenciaPenalizacion(const tSolution<int> &solution, unsigned pos_change, int new_value) {
+        int penalizacion = 0;
+        int old_value = solution[pos_change];
+        for(int i=0; i<nPuntos; ++i){
+            if(i != pos_change){
+                if(restricciones[pos_change][i] == -1){ // CL
+                    if(solution[i] == new_value) ++penalizacion;
+                    if(solution[i] == old_value) --penalizacion;
+                }
+                else if(restricciones[pos_change][i] == 1){ // ML
+                    if(solution[i] != new_value) ++penalizacion;
+                    if(solution[i] != old_value) --penalizacion;
+                }
+            }
+        }
+        return penalizacion;
+    }
 };

@@ -17,7 +17,7 @@ ResultMH<int> LocalSearch::optimize(Problem<int> &problem, int maxevals) {
     tFitness fitness = problem.fitness(solution);
     SolutionFactoringInfo<int> *solution_info = problem.generateFactoringInfo(solution);
     auto neighborhood = getMoves(problem);
-    unsigned int evaluations = 0;
+    unsigned int evaluations = 1;
     bool improved = true;
 
     do {
