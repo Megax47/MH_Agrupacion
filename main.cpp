@@ -42,21 +42,20 @@ int main(int argc, char *argv[]) {
                                            make_pair("Greedy", &rgreedy),
                                            make_pair("LocalSearch", &rlocal)};
   Problem<int> *problem = dynamic_cast<Problem<int> *>(&rproblem);
-
+  //cout << "Algorithm,Fitness,Evaluations,Time(s)" << endl;
   for (int i = 0; i < algoritmos.size(); i++) {
     Random::seed(seed);
-    cout << algoritmos[i].first << endl;
+    cout << algoritmos[i].first << ",";
     auto mh = algoritmos[i].second;
     auto momentoInicio = std::chrono::high_resolution_clock::now();
     ResultMH result = mh->optimize(*problem, 100000);
     auto momentoFin = std::chrono::high_resolution_clock::now();
     //cout << "Best solution: " << result.solution << endl;
     //cout << "Is valid: " << problem->isValid(result.solution) << endl;
-    cout << problem->EvaluateSolution(result.solution) << endl;
-    cout << "Evaluations: " << result.evaluations << endl;
+    cout << problem->EvaluateSolution(result.solution) << ",";
+    cout << result.evaluations << ",";
     std::chrono::milliseconds tiempo = std::chrono::duration_cast<std::chrono::milliseconds>(momentoFin - momentoInicio);
-    cout <<"Tiempo Pasado: " <<tiempo.count() <<endl;
-    cout << "-----------------------------" << endl;
+    cout <<tiempo.count()/1000.0 <<endl;
   }
 
   return 0;

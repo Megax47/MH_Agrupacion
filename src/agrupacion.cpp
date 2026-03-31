@@ -79,7 +79,7 @@ Agrupacion::Agrupacion (const char* dataFilename, const char* constraintFilename
 
     //Calcular Lambda
 
-        //Distancia maxima (¿Precalcular matriz de distancias?)
+        //Distancia maxima entre puntos para normalizar la penalización por restricciones incumplidas
     float max_dist = 0;
     float dist_act = 0;
     for(int i=0; i<nPuntos; ++i){
@@ -92,6 +92,7 @@ Agrupacion::Agrupacion (const char* dataFilename, const char* constraintFilename
     lambda = max_dist/(ML.size()+CL.size());
 
     //std::cout << max_dist << " , " << ML.size()+CL.size() << std::endl;
+    //std::cout << "Lambda: " << lambda << std::endl;
 }
 
 tFitness Agrupacion::fitness(const tSolution<int> &solution){
@@ -100,7 +101,7 @@ tFitness Agrupacion::fitness(const tSolution<int> &solution){
 
     int dimension = getDimension();
 
-    //Separar en clusters
+    //Separar en clusters //!Esto realmente es una tonteria
     std::vector<std::vector<int>> clusters(nCluster);
     for(int i=0; i<nPuntos; ++i) clusters[solution[i]].push_back(i);
 
@@ -323,7 +324,7 @@ std::string Agrupacion::EvaluateSolution(tSolution<int> &solution){
     }
     desviacion_media /= nCluster;
 
-    return "Fitness: " + std::to_string(fitness) 
-    + "\nPenalización: " + std::to_string(penalizacion)
-    + "\nDistancia media: " + std::to_string(desviacion_media);
+    return  std::to_string(fitness) 
+    + "," + std::to_string(desviacion_media)
+    + "," + std::to_string(penalizacion);
 }
