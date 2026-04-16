@@ -41,3 +41,5 @@ build/CMakeCache.txt
 main
 main_profile.output
 /out
+/Entrega_P1
+*.zip
