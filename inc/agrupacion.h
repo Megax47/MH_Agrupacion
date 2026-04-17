@@ -187,7 +187,7 @@ public:
 
     void fix(tSolution<int> &solution) {};
 
-    int getPenalizacion(const tSolution<int> &solution) {
+    int getPenalizacion(const tSolution<int> &solution) const{
         int penalizacion = 0;
         for(int i=0; i<ML.size(); ++i){
             auto ML_pair = ML[i];
@@ -201,7 +201,7 @@ public:
     }
 
     //Calcula la diferencia en la penalización por restricciones incumplidas de un solo punto, para usar en el factoring
-    int getDiferenciaPenalizacion(const tSolution<int> &solution, unsigned pos_change, int new_value) {
+    int getDiferenciaPenalizacion(const tSolution<int> &solution, unsigned pos_change, int new_value) const {
         int penalizacion = 0;
         int old_value = solution[pos_change];
         for(int i=0; i<nPuntos; ++i){
