@@ -185,7 +185,24 @@ public:
 
     std::string EvaluateSolution(tSolution<int> &solution);
 
-    void fix(tSolution<int> &solution) {};
+    void fix(tSolution<int> &solution) {
+        //Anotar elementos por cluster
+        std::vector<int> point_per_cluster(nCluster, 0);
+        for (int i = 0; i < solution.size(); ++i) {
+            ++point_per_cluster[solution[i]];
+        }
+        for (int i = 0; i < nCluster; ++i) {
+            while (point_per_cluster[i] == 0) { //Cluster sin puntos
+                int p = Random::get<int>(0,nPuntos);
+                if(point_per_cluster[solution[p]] > 1){ //Garantizamos que arreglando uno no rompemos otro
+                    solution[p] = i;    //Actualizamos todo
+                    --point_per_cluster[solution[p]];
+                    ++point_per_cluster[i];
+                }
+            }
+        }
+        
+    }
 
     int getPenalizacion(const tSolution<int> &solution) const{
         int penalizacion = 0;
