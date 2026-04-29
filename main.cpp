@@ -12,6 +12,7 @@
 #include "greedy.h"
 #include "randomsearch.h"
 #include "localsearch.h"
+#include "genetic.h"
 
 using namespace std;
 
@@ -35,12 +36,17 @@ int main(int argc, char *argv[]) {
   RandomSearch<int> ralg = RandomSearch<int>();
   GreedySearch rgreedy = GreedySearch();
   LocalSearch rlocal = LocalSearch();
+  AGE<UniformCO> age_un = AGE<UniformCO>();
+  AGG<FixSegmentCO> agg_sf = AGG<FixSegmentCO>();
+
   // Create the specific problem
   Agrupacion rproblem = Agrupacion(argv[1], argv[2], atoi(argv[3]));
   // Solve using evaluations
   vector<pair<string, MH<int> *> > algoritmos = {make_pair("RandomSearch", &ralg),
                                            make_pair("Greedy", &rgreedy),
-                                           make_pair("LocalSearch", &rlocal)};
+                                           make_pair("LocalSearch", &rlocal),
+                                           make_pair("AGE_UN", &age_un),
+                                           make_pair("AGG_SF", &agg_sf)};
   Problem<int> *problem = dynamic_cast<Problem<int> *>(&rproblem);
   //cout << "Algorithm,Fitness,Evaluations,Time(s)" << endl;
   for (int i = 0; i < algoritmos.size(); i++) {
@@ -48,7 +54,7 @@ int main(int argc, char *argv[]) {
     cout << algoritmos[i].first << ",";
     auto mh = algoritmos[i].second;
     auto momentoInicio = std::chrono::high_resolution_clock::now();
-    ResultMH result = mh->optimize(*problem, 100000);
+    ResultMH result = mh->optimize(*problem, 1000);
     auto momentoFin = std::chrono::high_resolution_clock::now();
     //cout << "Best solution: " << result.solution << endl;
     //cout << "Is valid: " << problem->isValid(result.solution) << endl;
