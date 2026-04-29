@@ -1,6 +1,7 @@
 #include <genetic.h>
 
-int Genetic::select(){
+template<typename CrossoverOp>
+int Genetic<CrossoverOp>::select(){
     std::vector<int> index(population_size);
     std::iota(std::begin(index), std::end(index), 0); 
     Random::shuffle(index);
@@ -18,7 +19,8 @@ int Genetic::select(){
     return best;
 }
 
-void Genetic::mutate(Cromosoma &solution, Problem<int> &problem){
+template<typename CrossoverOp>
+void Genetic<CrossoverOp>::mutate(Cromosoma &solution){
     do{ //?Si veo que puede atascarse, evitar repeticiones con un shufle
         int pos = Random::get<int>(0,problem.getSolutionSize());
         int val = Random::get<int>(0,problem.getSolutionDomainRange().second);
@@ -26,7 +28,8 @@ void Genetic::mutate(Cromosoma &solution, Problem<int> &problem){
     }while(!problem.isValid(solution.genes));
 }
 
-ResultMH<int> AGE::optimize(Problem<int> &problem, int maxevals) {
+template<typename CrossoverOp>
+ResultMH<int> AGE<CrossoverOp>::optimize(int maxevals) {
     int evaluations = population_size;
 
     // Inicializar la población
@@ -84,7 +87,8 @@ ResultMH<int> AGE::optimize(Problem<int> &problem, int maxevals) {
     return ResultMH(best.genes, best.fitness, evaluations); // Devolver el mejor individuo encontrado
 }
 
-ResultMH<int> AGG::optimize(Problem<int> &problem, int maxevals) {
+template<typename CrossoverOp>
+ResultMH<int> AGG<CrossoverOp>::optimize(int maxevals) {
     int evaluations = population_size;
 
     // Inicializar la población
@@ -141,4 +145,6 @@ ResultMH<int> AGG::optimize(Problem<int> &problem, int maxevals) {
     return ResultMH(best.genes, best.fitness, evaluations); // Devolver el mejor individuo encontrado
 }
 
-std::pair<Cromosoma, Cromosoma> crossover(const Cromosoma &parent1, const Cromosoma &parent2);
+std::pair<Cromosoma, Cromosoma> crossover(const Cromosoma &parent1, const Cromosoma &parent2){
+    
+}
