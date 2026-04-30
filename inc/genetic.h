@@ -15,6 +15,8 @@ struct Cromosoma {
     }
 };
 
+//! Realmente tarda??? Si es así, shuffle y me quedo con la mitad de los números 
+//TODO profiling
 struct UniformCO {
     std::pair<Cromosoma, Cromosoma> operator()(
         const Cromosoma &parent1, 

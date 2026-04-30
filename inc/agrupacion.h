@@ -140,6 +140,7 @@ public:
     
     size_t getSolutionSize() { return nPuntos; }
 
+    //Devuelve 0, nCluster
     std::pair<int, int> getSolutionDomainRange() { 
         return std::make_pair(0, nCluster); 
     }
