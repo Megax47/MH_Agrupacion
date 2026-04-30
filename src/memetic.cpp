@@ -1,6 +1,5 @@
 #include "memetic.h"
 
-
 //Basado en AGG
 ResultMH<int> Memetic::optimize(Problem<int> &problem, int maxevals){
      int evaluations = this->population_size;
@@ -15,8 +14,8 @@ ResultMH<int> Memetic::optimize(Problem<int> &problem, int maxevals){
         }
 
         while(evaluations < maxevals){
-            int i = 0;
-            while(i < round && evaluations < maxevals){
+            int rounds = 0;
+            while(rounds < round && evaluations < maxevals){
                 //Nos quedamos el mejor (Elitismo)
                 Cromosoma best = this->population[this->bestFit()];
 
@@ -66,18 +65,19 @@ ResultMH<int> Memetic::optimize(Problem<int> &problem, int maxevals){
                     }
                 }
 
-                //Sustituimos el peor de la actual por el mejor de la anterior
-                this->population[this->lessFit().first] = best;
-                ++i;
+                //Sustituimos el peor de la actual por el mejor de la anterior si es mejor
+                if(this->population[this->lessFit().first].fitness > best.fitness)
+                    this->population[this->lessFit().first] = best;
+                ++rounds;
             }
-            applyBLS();
+            applyBLS(problem, evaluations, maxevals);
         }
 
         Cromosoma best = this->population[this->bestFit()];
         return ResultMH(best.genes, best.fitness, evaluations); // Devolver el mejor individuo encontrado
 }
 
-ResultMH<int> Memetic::BLS(Problem<int> &problem, Cromosoma &solution){
+ResultMH<int> Memetic::BLS(Problem<int> &problem, Cromosoma &solution, int &evaluations ,int maxevals){
 
     int N = problem.getSolutionSize();
     std::vector<int> index(N);
@@ -87,21 +87,23 @@ ResultMH<int> Memetic::BLS(Problem<int> &problem, Cromosoma &solution){
     int max_fallos = epsilon*N;
     int fallos = 0;
     int i = 0;
-    int evaluations = 0;
+    int BLS_evals = 0;
     Cromosoma new_sol = solution;
     SolutionFactoringInfo<int> *solution_info = problem.generateFactoringInfo(solution.genes);
 
     int l1 = problem.getSolutionDomainRange().first;
     int l2 = problem.getSolutionDomainRange().second;
 
-    while((fallos < max_fallos) && (i < N) && (evaluations < BLS_maxevals)){
+    while((fallos < max_fallos) && (i < N) && (BLS_evals < BLS_maxevals) && (evaluations < maxevals)){
         int p = index[i];
         int old_value = solution.genes[p];
 
-        for( int val=l1; val<l2 && evaluations < BLS_maxevals; ++val){
+        for( int val=l1; val<l2 && (BLS_evals < BLS_maxevals) && (evaluations < maxevals); ++val){
+            if(val == old_value) continue;
             new_sol.genes[p] = val;
             new_sol.fitness = problem.fitness(new_sol.genes,solution_info,p,val);
             ++evaluations;
+            ++BLS_evals;
             if(new_sol.fitness < solution.fitness){
                 problem.updateSolutionFactoringInfo(solution_info,solution.genes, p, val);
                 solution = new_sol; 
@@ -118,3 +120,41 @@ ResultMH<int> Memetic::BLS(Problem<int> &problem, Cromosoma &solution){
     return ResultMH(solution.genes, solution.fitness, evaluations);
 }
 
+void AM_All::applyBLS(Problem<int> &problem, int &evaluations, int maxevals){
+    
+    for(int i=0; i<population_size && evaluations < maxevals; ++i){
+        auto mejora = BLS(problem, population[i], evaluations, maxevals);
+        population[i].genes = mejora.solution;
+        population[i].fitness = mejora.fitness;
+    }
+}
+
+void AM_Rand::applyBLS(Problem<int> &problem, int &evaluations, int maxevals){
+    
+    for(int i=0; i<population_size && evaluations < maxevals; ++i){
+        if(Random::get<bool>(prob_LS)){
+            auto mejora = BLS(problem, population[i], evaluations, maxevals);
+            population[i].genes = mejora.solution;
+            population[i].fitness = mejora.fitness;
+        }
+    }
+}
+
+void AM_Best::applyBLS(Problem<int> &problem, int &evaluations, int maxevals){
+
+    std::sort(population.begin(), population.end(),
+        [](const Cromosoma& a, const Cromosoma& b){ return a.fitness < b.fitness; });
+
+    int selected = pob_percent*population_size;
+
+    for(int i=0; i<selected && evaluations < maxevals; ++i){
+        auto mejora = BLS(problem, population[i], evaluations, maxevals);
+        population[i].genes = mejora.solution;
+        population[i].fitness = mejora.fitness;
+    }
+}
+
+Memetic::Memetic() = default;
+AM_All::AM_All()  = default;
+AM_Rand::AM_Rand() = default;
+AM_Best::AM_Best() = default;

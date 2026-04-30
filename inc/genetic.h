@@ -229,8 +229,9 @@ public:
                 }
             }
 
-            //Sustituimos el peor de la actual por el mejor de la anterior
-            this->population[this->lessFit().first] = best;
+            //Sustituimos el peor de la actual por el mejor de la anterior si es mejor
+            if(this->population[this->lessFit().first].fitness > best.fitness)
+                this->population[this->lessFit().first] = best;
         }
         Cromosoma best = this->population[this->bestFit()];
         return ResultMH(best.genes, best.fitness, evaluations); // Devolver el mejor individuo encontrado
