@@ -46,33 +46,44 @@ struct FixSegmentCO {
         const Cromosoma &parent2, 
         Problem<int> &problem
     ) const {
-        int N = problem.getSolutionSize();
-        tSolution<int> c1g(N), c2g(N);
+           int N = parent1.genes.size();
 
+        tSolution<int> c1(N, -1);
+        tSolution<int> c2(N, -1);
+
+        // 1. Elegir segmento
         int pos = Random::get<int>(0, N-1);
-        int tam = std::max(1,Random::get<int>(1, N/3));
+        int tam = Random::get<int>(1, std::max(1, N/3));
 
-        int idx = 0;
-        for(int i = 0; i < tam; ++i) {
-            idx = (i + pos) % N;
-            c1g[idx] = parent1.genes[idx];
-            c2g[idx] = parent2.genes[idx];
+        // 2. Copiar segmento fijo
+        for(int i = 0; i < tam; ++i){
+            int idx = (pos + i) % N;
+            c1[idx] = parent1.genes[idx];
+            c2[idx] = parent2.genes[idx];
         }
 
-        for(int i = 0; i < N - tam; ++i) {
-            int idx2 = (i + idx) % N;
-            if(Random::get<bool>(0.5)) {
-                c1g[idx2] = parent1.genes[idx2];
-                c2g[idx2] = parent2.genes[idx2];
-            } else {
-                c1g[idx2] = parent2.genes[idx2];
-                c2g[idx2] = parent1.genes[idx2];
+        // 3. Rellenar el resto con el otro padre
+        for(int i = 0; i < N; ++i){
+            if(c1[i] == -1){
+                if(Random::get<bool>(0.5)){
+                    c1[i] = parent2.genes[i];
+                    c2[i] = parent1.genes[i];
+                }
+                else{
+                    c1[i] = parent1.genes[i];
+                    c2[i] = parent2.genes[i];
+                }
             }
         }
 
-        problem.fix(c1g);
-        problem.fix(c2g);
-        return std::make_pair(Cromosoma(c1g, -1), Cromosoma(c2g, -1));
+        // 4. Reparar soluciones
+        problem.fix(c1);
+        problem.fix(c2);
+
+        return {
+            Cromosoma(c1, -1),
+            Cromosoma(c2, -1)
+        };
     }
 };
 
@@ -84,30 +95,26 @@ protected:
     std::vector<Cromosoma> population;
     const int population_size = 50;
     const int tournament_size = 3;
-    const float mutation_rate = 0.01;
+    const float mutation_rate = 0.1;
     const float crossover_rate = 0.8;
     
 public:
     Genetic() = default;
     virtual ~Genetic() = default;
     virtual ResultMH<int> optimize(Problem<int> &problem, int maxevals) = 0;
+
     int select(){
-        std::vector<int> index(population_size);
-        std::iota(std::begin(index), std::end(index), 0); 
-        Random::shuffle(index);
+        int best = Random::get<int>(0, population_size - 1);
 
-        float bf = MAXFLOAT;
-        int best = -1;
-
-        for(int i=0; i<tournament_size; ++i){
-            if(population[index[i]].fitness < bf){
-                bf = population[index[i]].fitness;
-                best = i;
+        for(int i = 1; i < tournament_size; ++i){
+            int r = Random::get<int>(0, population_size - 1);
+            if(population[r].fitness < population[best].fitness){
+                best = r;
             }
         }
-        //std::cout << "select: " << best << endl;
-        return index[best];
+        return best;
     }
+
     std::pair<Cromosoma, Cromosoma> crossover(const Cromosoma &parent1, const Cromosoma &parent2, Problem<int> &problem) {
         return crossover_op(parent1, parent2, problem);
     }
@@ -136,27 +143,21 @@ protected:
     
     //Primero es el peor, después el segundo peor
     std::pair<int,int> lessFit() { 
-        std::pair<int,int> w;
-        w.first = -1;
-        w.second = -1;
-        float wf = 0;
-        float wf2 = 0;
-        for(int i=0; i<population_size; ++i){
-            if(population[i].fitness > wf2){
-                if(population[i].fitness > wf){
-                    wf2 = wf;
-                    w.second = w.first;
-                    wf = population[i].fitness;
-                    w.first = i;
-                }
-                else{
-                    wf2 = population[i].fitness;
-                    w.second = i;
-                }
+        int w1 = 0, w2 = 1;
+
+        if (population[w2].fitness > population[w1].fitness)
+            std::swap(w1, w2);
+
+        for(int i = 2; i < population_size; ++i){
+            if(population[i].fitness > population[w1].fitness){
+                w2 = w1;
+                w1 = i;
+            } else if(population[i].fitness > population[w2].fitness){
+                w2 = i;
             }
         }
-        //std::cout << "lessFit: " << w.first << " , " << w.second << endl;
-        return w;
+
+        return {w1, w2};
     }
 };
 
@@ -181,23 +182,29 @@ public:
             Cromosoma best = this->population[this->bestFit()];
 
             //Seleccionar padres
-            std::vector<int> selected(this->population_size);
+            std::vector<int> selected;
+            selected.reserve(this->population_size);
             for (int i=0; i< this->population_size; ++i) {
-                selected[i] = this->select();
+                selected.push_back(this->select());
             }
+
+            std::vector<Cromosoma> new_pop;
+            new_pop.reserve(this->population_size);
 
             //Cruzar el número esperado de veces en orden fijo
             int spected_crossovers = (this->population_size/2)*this->crossover_rate;
-            for (int i=0; i < spected_crossovers; i+=2){
-                auto [child1, child2] = this->crossover(this->population[selected[i]], this->population[selected[i+1]], problem);
-                this->population[i].genes = child1.genes;
-                this->population[i+1].genes = child2.genes;
+            for (int i=0; i < spected_crossovers; ++i){
+                auto [child1, child2] = this->crossover(this->population[selected[2*i]], this->population[selected[2*i+1]], problem);
+                new_pop.push_back(child1);
+                new_pop.push_back(child2);
             }
 
             //Asignar los que no cruzaron directamente
             for (int i=spected_crossovers*2; i<this->population_size; ++i){
-                this->population[i] = this->population[selected[i]];
+                new_pop.push_back(this->population[selected[i]]);
             }
+
+            this->population = std::move(new_pop);
 
             //Seleccionamos los cromosomas a mutar
             std::vector<int> index(this->population_size);
@@ -209,10 +216,12 @@ public:
                 this->mutate(this->population[index[i]], problem);
             }
 
-            //Calculamos el fitness de todos
-            for(int i=0; i<this->population_size; ++i){
-                this->population[i].fitness = problem.fitness(this->population[i].genes);
-                ++evaluations;
+            //Calculamos el fitness de todos los que hayan cambiado
+            for (int i = 0; i < this->population_size; ++i) {
+                if (this->population[i].fitness < 0) {
+                    this->population[i].fitness = problem.fitness(this->population[i].genes);
+                    ++evaluations;
+                }
             }
 
             //Sustituimos el peor de la actual por el mejor de la anterior
@@ -263,25 +272,17 @@ public:
             float wf1 = this->population[worst.first].fitness;
             float wf2 = this->population[worst.second].fitness;
 
-            if(fitness1 < fitness2){
-                if(fitness2 < wf2){
-                    this->population[worst.first] = child1;
-                    this->population[worst.second] = child2;
-                }else if(fitness1 < wf2){
-                    this->population[worst.first] = child1;
-                }else if(fitness1 < wf1){
-                    this->population[worst.first] = child1;
-                }
-            }else{
-                if(fitness1 < wf2){
-                    this->population[worst.first] = child2;
-                    this->population[worst.second] = child1;
-                }else if(fitness2 < wf2){
-                    this->population[worst.first] = child2;
-                }else if(fitness2 < wf1){
-                    this->population[worst.first] = child2;
-                }
-            }
+         // Reunir los 4 candidatos y quedarse los 2 mejores
+            std::vector<Cromosoma*> candidates = {
+                &child1, &child2,
+                &this->population[worst.first],
+                &this->population[worst.second]
+            };
+            std::sort(candidates.begin(), candidates.end(),
+                [](const Cromosoma* a, const Cromosoma* b){ return a->fitness < b->fitness; });
+
+            this->population[worst.first]  = *candidates[0];
+            this->population[worst.second] = *candidates[1];
         }
         Cromosoma best = this->population[this->bestFit()];
         return ResultMH(best.genes, best.fitness, evaluations); // Devolver el mejor individuo encontrado

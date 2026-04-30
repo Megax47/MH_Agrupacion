@@ -193,7 +193,7 @@ public:
         }
         for (int i = 0; i < nCluster; ++i) {
             while (point_per_cluster[i] == 0) { //Cluster sin puntos
-                int p = Random::get<int>(0,nPuntos);
+                int p = Random::get<int>(0,nPuntos-1);
                 if(point_per_cluster[solution[p]] > 1){ //Garantizamos que arreglando uno no rompemos otro
                     solution[p] = i;    //Actualizamos todo
                     --point_per_cluster[solution[p]];

@@ -37,6 +37,8 @@ int main(int argc, char *argv[]) {
   GreedySearch rgreedy = GreedySearch();
   LocalSearch rlocal = LocalSearch();
   AGE<UniformCO> age_un = AGE<UniformCO>();
+  AGE<FixSegmentCO> age_sf = AGE<FixSegmentCO>();
+  AGG<UniformCO> agg_un = AGG<UniformCO>();
   AGG<FixSegmentCO> agg_sf = AGG<FixSegmentCO>();
 
   // Create the specific problem
@@ -46,6 +48,8 @@ int main(int argc, char *argv[]) {
                                            make_pair("Greedy", &rgreedy),
                                            make_pair("LocalSearch", &rlocal),
                                            make_pair("AGE_UN", &age_un),
+                                           make_pair("AGE_SF", &age_sf),
+                                           make_pair("AGG_UN", &agg_un),
                                            make_pair("AGG_SF", &agg_sf)};
   Problem<int> *problem = dynamic_cast<Problem<int> *>(&rproblem);
   //cout << "Algorithm,Fitness,Evaluations,Time(s)" << endl;
@@ -54,7 +58,7 @@ int main(int argc, char *argv[]) {
     cout << algoritmos[i].first << ",";
     auto mh = algoritmos[i].second;
     auto momentoInicio = std::chrono::high_resolution_clock::now();
-    ResultMH result = mh->optimize(*problem, 1000);
+    ResultMH result = mh->optimize(*problem, 10000);
     auto momentoFin = std::chrono::high_resolution_clock::now();
     //cout << "Best solution: " << result.solution << endl;
     //cout << "Is valid: " << problem->isValid(result.solution) << endl;
