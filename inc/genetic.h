@@ -49,10 +49,10 @@ struct FixSegmentCO {
         int N = problem.getSolutionSize();
         tSolution<int> c1g(N), c2g(N);
 
-        int pos = Random::get<int>(0, N);
-        int tam = Random::get<int>(1, N/3);
+        int pos = Random::get<int>(0, N-1);
+        int tam = std::max(1,Random::get<int>(1, N/3));
 
-        int idx = -1;
+        int idx = 0;
         for(int i = 0; i < tam; ++i) {
             idx = (i + pos) % N;
             c1g[idx] = parent1.genes[idx];
@@ -62,11 +62,11 @@ struct FixSegmentCO {
         for(int i = 0; i < N - tam; ++i) {
             int idx2 = (i + idx) % N;
             if(Random::get<bool>(0.5)) {
-                c1g[i] = parent1.genes[i];
-                c2g[i] = parent2.genes[i];
+                c1g[idx2] = parent1.genes[idx2];
+                c2g[idx2] = parent2.genes[idx2];
             } else {
-                c1g[i] = parent2.genes[i];
-                c2g[i] = parent1.genes[i];
+                c1g[idx2] = parent2.genes[idx2];
+                c2g[idx2] = parent1.genes[idx2];
             }
         }
 
@@ -105,19 +105,18 @@ public:
                 best = i;
             }
         }
-
-        return best;
+        //std::cout << "select: " << best << endl;
+        return index[best];
     }
     std::pair<Cromosoma, Cromosoma> crossover(const Cromosoma &parent1, const Cromosoma &parent2, Problem<int> &problem) {
         return crossover_op(parent1, parent2, problem);
     }
     
     void mutate(Cromosoma &solution, Problem<int> &problem) {
-        do{
-            int pos = Random::get<int>(0, problem.getSolutionSize());
-            int val = Random::get<int>(0, problem.getSolutionDomainRange().second);
-            solution.genes[pos] = val;
-        }while(!problem.isValid(solution.genes));
+        int pos = Random::get<int>(0, problem.getSolutionSize()-1);
+        int val = Random::get<int>(0, problem.getSolutionDomainRange().second-1);
+        solution.genes[pos] = val;
+        problem.fix(solution.genes);
     }
 
 
@@ -131,6 +130,7 @@ protected:
                 b = i;
             }
         }
+        //std::cout << "bestFit: " << b << endl;
         return b;
     }
     
@@ -155,6 +155,7 @@ protected:
                 }
             }
         }
+        //std::cout << "lessFit: " << w.first << " , " << w.second << endl;
         return w;
     }
 };
@@ -164,6 +165,8 @@ class AGG : public Genetic<CrossoverOp> {
 public:
     ResultMH<int> optimize(Problem<int> &problem, int maxevals){
         int evaluations = this->population_size;
+        this->population.clear();
+        this->population.reserve(this->population_size);
 
         // Inicializar la población
         for (int i = 0; i < this->population_size; ++i) {
@@ -226,6 +229,8 @@ class AGE : public Genetic<CrossoverOp>  {
 public:
     ResultMH<int> optimize(Problem<int> &problem, int maxevals){
         int evaluations = this->population_size;
+        this->population.clear();
+        this->population.reserve(this->population_size);
 
         // Inicializar la población
         for (int i = 0; i < this->population_size; ++i) {

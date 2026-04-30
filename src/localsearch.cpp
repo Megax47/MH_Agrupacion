@@ -43,5 +43,7 @@ ResultMH<int> LocalSearch::optimize(Problem<int> &problem, int maxevals) {
         }
     }while(evaluations < maxevals && improved);
 
+    delete solution_info;
+
     return ResultMH<int>(solution, fitness, evaluations);
 }
