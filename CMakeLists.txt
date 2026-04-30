@@ -10,7 +10,9 @@ add_executable(main "main.cpp" ${C_SOURCES})
 set(CMAKE_CXX_FLAGS_DEBUG "-fsanitize=address -g")
 set(CMAKE_EXE_LINKER_FLAGS_DEBUG "-fsanitize=address")
 set(CMAKE_CXX_FLAGS_RELEASE "-O2")
+set(CMAKE_CXX_FLAGS_PROFILE "-O2 -g")
 # set(CMAKE_CXX_FLAGS_RELEASE "-O3 -march=native")
+
 # include(FetchContent)
 # FetchContent_Declare(
 #   googletest
