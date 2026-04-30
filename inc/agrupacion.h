@@ -14,9 +14,9 @@ struct Punto {
 
     //Sobrecargar < para usar set
     bool operator<(const Punto& other) const {
-        for(int i=0;i<posicion.size();++i){
-            if (this->posicion.at(i) < other.posicion.at(i)) 
-                return true;
+        for (int i = 0; i < posicion.size(); ++i) {
+        if (posicion[i] < other.posicion[i]) return true;
+        if (posicion[i] > other.posicion[i]) return false;
         }
         return false;
     }
@@ -39,6 +39,17 @@ struct Punto {
             sum += dif*dif;
         }
         return sqrt(sum);
+    }
+
+     float distanciaEuclidea2(const Punto& other) const {
+        assert(posicion.size() == other.posicion.size());
+        float sum = 0;
+        float dif = 0;
+        for(int i=0; i<posicion.size(); ++i){ //?Desenrrollar
+            dif = posicion[i]-other.posicion[i];
+            sum += dif*dif;
+        }
+        return sum;
     }
 };
 
@@ -195,8 +206,9 @@ public:
             while (point_per_cluster[i] == 0) { //Cluster sin puntos
                 int p = Random::get<int>(0,nPuntos-1);
                 if(point_per_cluster[solution[p]] > 1){ //Garantizamos que arreglando uno no rompemos otro
+                    int old_cluster = solution[p];
                     solution[p] = i;    //Actualizamos todo
-                    --point_per_cluster[solution[p]];
+                    --point_per_cluster[old_cluster];
                     ++point_per_cluster[i];
                 }
             }

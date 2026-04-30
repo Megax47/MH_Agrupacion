@@ -58,7 +58,7 @@ int main(int argc, char *argv[]) {
     cout << algoritmos[i].first << ",";
     auto mh = algoritmos[i].second;
     auto momentoInicio = std::chrono::high_resolution_clock::now();
-    ResultMH result = mh->optimize(*problem, 10000);
+    ResultMH result = mh->optimize(*problem, 100000);
     auto momentoFin = std::chrono::high_resolution_clock::now();
     //cout << "Best solution: " << result.solution << endl;
     //cout << "Is valid: " << problem->isValid(result.solution) << endl;
