@@ -220,9 +220,12 @@ public:
 
             //Calculamos el fitness de todos los que hayan cambiado
             for (int i = 0; i < this->population_size; ++i) {
-                if (this->population[i].fitness < 0) {
-                    this->population[i].fitness = problem.fitness(this->population[i].genes);
-                    ++evaluations;
+                if (this->population[i].fitness < 0){
+                    if(evaluations < maxevals){ //No pasarnos evaluando
+                        this->population[i].fitness = problem.fitness(this->population[i].genes);
+                        ++evaluations;
+                    }else this->population[i].fitness = MAXFLOAT;
+                    
                 }
             }
 
