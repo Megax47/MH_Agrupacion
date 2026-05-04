@@ -88,7 +88,6 @@ ResultMH<int> Memetic::BLS(Problem<int> &problem, Cromosoma &solution, int &eval
     int fallos = 0;
     int i = 0;
     int BLS_evals = 0;
-    Cromosoma new_sol = solution;
     SolutionFactoringInfo<int> *solution_info = problem.generateFactoringInfo(solution.genes);
 
     int l1 = problem.getSolutionDomainRange().first;
@@ -99,19 +98,18 @@ ResultMH<int> Memetic::BLS(Problem<int> &problem, Cromosoma &solution, int &eval
         int old_value = solution.genes[p];
 
         for( int val=l1; val<l2 && (BLS_evals < BLS_maxevals) && (evaluations < maxevals); ++val){
-            if(val == old_value) continue;
-            new_sol.genes[p] = val;
-            new_sol.fitness = problem.fitness(new_sol.genes,solution_info,p,val);
+            if(val == old_value || !problem.isValid(solution.genes, p, val)) continue;
+            tFitness new_fitness = problem.fitness(solution.genes,solution_info,p,val);
             ++evaluations;
             ++BLS_evals;
-            if(new_sol.fitness < solution.fitness){
+            if(new_fitness < solution.fitness){
                 problem.updateSolutionFactoringInfo(solution_info,solution.genes, p, val);
-                solution = new_sol; 
+                solution.genes[p] = val;
+                solution.fitness = new_fitness; 
             }
-            else new_sol.genes[p] = solution.genes[p];
         }
 
-        if(old_value == new_sol.genes[p]) ++fallos;
+        if(old_value == solution.genes[p]) ++fallos;
         ++i;
     }
 
