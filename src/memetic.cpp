@@ -84,6 +84,10 @@ ResultMH<int> Memetic::BLS(Problem<int> &problem, Cromosoma &solution, int &eval
     std::iota(std::begin(index), std::end(index), 0); 
     Random::shuffle(index);
 
+    int K = problem.getSolutionDomainRange().second;
+    std::vector<int> values(K);
+    std::iota(std::begin(values), std::end(values), problem.getSolutionDomainRange().first); 
+    
     int max_fallos = epsilon*N;
     int fallos = 0;
     int i = 0;
@@ -96,8 +100,10 @@ ResultMH<int> Memetic::BLS(Problem<int> &problem, Cromosoma &solution, int &eval
     while((fallos < max_fallos) && (i < N) && (BLS_evals < BLS_maxevals) && (evaluations < maxevals)){
         int p = index[i];
         int old_value = solution.genes[p];
+        Random::shuffle(values);
 
-        for( int val=l1; val<l2 && (BLS_evals < BLS_maxevals) && (evaluations < maxevals); ++val){
+        for( int j=l1; j<l2 && (BLS_evals < BLS_maxevals) && (evaluations < maxevals); ++j){
+            int val = values[j];
             if(val == old_value || !problem.isValid(solution.genes, p, val)) continue;
             tFitness new_fitness = problem.fitness(solution.genes,solution_info,p,val);
             ++evaluations;
