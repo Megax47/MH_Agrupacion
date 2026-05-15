@@ -45,8 +45,11 @@ int main(int argc, char *argv[]) {
   AM_All am_all = AM_All();
   AM_Rand am_rand = AM_Rand();
   AM_Best am_best = AM_Best();
-  BMB_Rand bmb_rand = BMB_Rand();
+  BMB_Unif bmb_unif = BMB_Unif();
+  BMB_NoUnif bmb_NoUnif = BMB_NoUnif();
   ES es = ES();
+  ILS ils = ILS();
+  ILS_ES ils_es = ILS_ES();
 
   // Create the specific problem
   Agrupacion rproblem = Agrupacion(argv[1], argv[2], atoi(argv[3]));
@@ -54,14 +57,11 @@ int main(int argc, char *argv[]) {
   vector<pair<string, MH<int> *> > algoritmos = {make_pair("RandomSearch", &ralg),
                                            make_pair("Greedy", &rgreedy),
                                            make_pair("LocalSearch", &rlocal),
-                                           make_pair("AGE_UN", &age_un),
-                                           make_pair("AGE_SF", &age_sf),
-                                           make_pair("AGG_UN", &agg_un),
-                                           make_pair("AGG_SF", &agg_sf),
-                                           make_pair("AM_All", &am_all),
                                            make_pair("AM_Rand", &am_rand),
-                                           make_pair("AM_Best", &am_best),
-                                           make_pair("BMB_rand", &bmb_rand),
+                                           make_pair("BMB_Unif", &bmb_unif),
+                                           make_pair("BMB_NoUnif", &bmb_NoUnif),
+                                           make_pair("ILS", &ils),
+                                           make_pair("ILS_ES", &ils_es),
                                            make_pair("ES", &es)};
   Problem<int> *problem = dynamic_cast<Problem<int> *>(&rproblem);
   //cout << "Algorithm,Fitness,Evaluations,Time(s)" << endl;
@@ -82,3 +82,12 @@ int main(int argc, char *argv[]) {
 
   return 0;
 }
+
+/*
+                                           make_pair("AGE_UN", &age_un),
+                                           make_pair("AGE_SF", &age_sf),
+                                           make_pair("AGG_UN", &agg_un),
+                                           make_pair("AGG_SF", &agg_sf),
+                                           make_pair("AM_All", &am_all),
+                                           make_pair("AM_Best", &am_best),
+*/

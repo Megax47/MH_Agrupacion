@@ -1,7 +1,7 @@
 #include "trajectory.h"
 #include <iostream>
 
-ResultMH<int> BMB_Rand::optimize(Problem<int> &problem, int maxevals){
+ResultMH<int> BMB_Unif::optimize(Problem<int> &problem, int maxevals){
     int maxLSevals = maxevals/n_inicios;
     int evals = 0;
     ResultMH<int> best_solution = LocalSearch::optimize(problem, maxLSevals);
@@ -15,8 +15,25 @@ ResultMH<int> BMB_Rand::optimize(Problem<int> &problem, int maxevals){
     return best_solution;
 }
 
+ResultMH<int> BMB_NoUnif::optimize(Problem<int> &problem, int maxevals){
+    int evals = 0;
+    ResultMH<int> best_solution = LocalSearch::optimize(problem, maxevals);
+    evals += best_solution.evaluations;
+    while(evals < maxevals){
+        ResultMH<int> solution = LocalSearch::optimize(problem, maxevals-evals);
+        evals += solution.evaluations;
+        if(solution.fitness < best_solution.fitness) best_solution = solution;
+    }
+    best_solution.evaluations = evals;
+    return best_solution;
+}
+
 ResultMH<int> ES::optimize(Problem<int> &problem, int maxevals){
-    tSolution<int> solution = problem.createSolution();
+    return optimize(problem,maxevals,problem.createSolution());
+}
+
+ResultMH<int> ES::optimize(Problem<int> &problem, int maxevals, tSolution<int> solution_ini){
+    tSolution<int> solution = solution_ini;
     SolutionFactoringInfo<int> *solution_info = problem.generateFactoringInfo(solution);
     float fitness = problem.fitness(solution);
 
