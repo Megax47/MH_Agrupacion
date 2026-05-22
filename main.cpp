@@ -48,6 +48,7 @@ int main(int argc, char *argv[]) {
   BMB_Unif bmb_unif = BMB_Unif();
   BMB_NoUnif bmb_NoUnif = BMB_NoUnif();
   ES es = ES();
+  ES es_t = ES(0.001);
   ILS ils = ILS();
   ILS_ES ils_es = ILS_ES();
 
@@ -62,7 +63,8 @@ int main(int argc, char *argv[]) {
                                            make_pair("BMB_NoUnif", &bmb_NoUnif),
                                            make_pair("ILS", &ils),
                                            make_pair("ILS_ES", &ils_es),
-                                           make_pair("ES", &es)};
+                                           make_pair("ES", &es),
+                                          make_pair("ES(T=0.001)", &es_t)};
   Problem<int> *problem = dynamic_cast<Problem<int> *>(&rproblem);
   //cout << "Algorithm,Fitness,Evaluations,Time(s)" << endl;
   for (int i = 0; i < algoritmos.size(); i++) {

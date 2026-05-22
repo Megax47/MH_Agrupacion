@@ -7,8 +7,9 @@ class ES: public MH<int> {
 private:
     float const phi = 0.3;
     float const mu = 0.2;
-    float const T_fin = 0.0001; //! 0.001 es mucha temperatura para la explotación final
+    float T_fin = 0.0001; //! 0.001 es mucha temperatura para la explotación final
 public:
+    ES(float T_fin=0.0001): T_fin(T_fin){};
     ResultMH<int> optimize(Problem<int> &problem, int maxevals);
     ResultMH<int> optimize(Problem<int> &problem, int maxevals, tSolution<int> solution_ini);
 };
