@@ -11,14 +11,9 @@ std::vector<std::pair<int,int>> getMoves(Problem<int> &problem) {
     return neighborhood;
 }
 
-ResultMH<int> LocalSearch::optimize(Problem<int> &problem, int maxevals){
-    return optimize(problem,maxevals,problem.createSolution());
-}
-
-ResultMH<int> LocalSearch::optimize(Problem<int> &problem, int maxevals, tSolution<int> solution_ini) {
-    assert(maxevals > 0);
+ResultMH<int> LocalSearch::optimize(Problem<int> &problem, const tSolution<int> &solution_ini, tFitness fitness, int maxevals) {
     tSolution<int> solution = solution_ini;
-    tFitness fitness = problem.fitness(solution);
+    tFitness new_fitness = fitness;
     SolutionFactoringInfo<int> *solution_info = problem.generateFactoringInfo(solution);
     auto neighborhood = getMoves(problem);
     unsigned int evaluations = 1;

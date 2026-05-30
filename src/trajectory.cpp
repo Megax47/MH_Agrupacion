@@ -28,14 +28,11 @@ ResultMH<int> BMB_NoUnif::optimize(Problem<int> &problem, int maxevals){
     return best_solution;
 }
 
-ResultMH<int> ES::optimize(Problem<int> &problem, int maxevals){
-    return optimize(problem,maxevals,problem.createSolution());
-}
 
-ResultMH<int> ES::optimize(Problem<int> &problem, int maxevals, tSolution<int> solution_ini){
+ResultMH<int> ES::optimize(Problem<int> &problem, const tSolution<int> &solution_ini, tFitness fitness_ini, int maxevals){
     tSolution<int> solution = solution_ini;
     SolutionFactoringInfo<int> *solution_info = problem.generateFactoringInfo(solution);
-    float fitness = problem.fitness(solution);
+    float fitness = fitness_ini;
 
     tSolution<int> best_solution = solution;
     float best_fitness = fitness;

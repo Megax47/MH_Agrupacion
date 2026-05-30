@@ -2,7 +2,7 @@
 
 #include <localsearch.h>
 
-class ES: public MH<int> {
+class ES: public MHTrayectory<int> {
 
 private:
     float const phi = 0.3;
@@ -10,8 +10,12 @@ private:
     float T_fin = 0.0001; //! 0.001 es mucha temperatura para la explotación final
 public:
     ES(float T_fin=0.0001): T_fin(T_fin){};
-    ResultMH<int> optimize(Problem<int> &problem, int maxevals);
-    ResultMH<int> optimize(Problem<int> &problem, int maxevals, tSolution<int> solution_ini);
+    ResultMH<int> optimize(Problem<int> &problem, int maxevals){
+        tSolution<int> initial = problem.createSolution();
+        tFitness fitness = problem.fitness(initial);
+        return optimize(problem, initial, fitness, maxevals-1);
+    }
+    ResultMH<int> optimize(Problem<int> &problem, const tSolution<int> &solution_ini, tFitness fitness_ini, int maxevals);
 };
 
 class BMB_Unif : public LocalSearch {
@@ -43,7 +47,8 @@ public:
         evals += best_solution.evaluations;
         for(int i=1; i<n_busquedas; ++i){
             tSolution<int> mutated_solution = mutate(best_solution.solution, problem);
-            ResultMH<int> solution = LocalSearch::optimize(problem, maxLSevals, mutated_solution);
+            tFitness mutated_fitness = problem.fitness(mutated_solution);
+            ResultMH<int> solution = LocalSearch::optimize(problem, mutated_solution, mutated_fitness, maxLSevals-1);
             evals += solution.evaluations;
             if(solution.fitness < best_solution.fitness) best_solution = solution;
         }
@@ -84,7 +89,8 @@ public:
         evals += best_solution.evaluations;
         for(int i=1; i<n_busquedas; ++i){
             tSolution<int> mutated_solution = mutate(best_solution.solution, problem);
-            ResultMH<int> solution = ES::optimize(problem, maxLSevals, mutated_solution);
+            tFitness mutated_fitness = problem.fitness(mutated_solution);
+            ResultMH<int> solution = ES::optimize(problem, mutated_solution, mutated_fitness, maxLSevals-1);
             evals += solution.evaluations;
             if(solution.fitness < best_solution.fitness) best_solution = solution;
         }
